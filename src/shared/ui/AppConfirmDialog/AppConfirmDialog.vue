@@ -1,56 +1,53 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue'
+import Dialog from 'primevue/dialog'
+import AppAlert from '../AppAlert/AppAlert.vue'
+import AppButton from '../AppButton/AppButton.vue'
 
-defineProps<{
-  title: string
-}>()
+// Діалог підтвердження (наприклад, видалення користувача)
+withDefaults(
+  defineProps<{
+    title: string
+    message: string
+    confirmLabel?: string
+    cancelLabel?: string
+    loading?: boolean
+    error?: string | null
+  }>(),
+  {
+    confirmLabel: 'Так',
+    cancelLabel: 'Ні',
+    loading: false,
+    error: null,
+  },
+)
 
 const emit = defineEmits<{
-  close: []
+  confirm: []
+  cancel: []
 }>()
 
-const modalElement = useTemplateRef<HTMLDivElement>('modal')
+const visible = defineModel<boolean>('visible', { default: false })
 
-onMounted(() => {
-  // Переносимо фокус у вікно, щоб воно отримувало натискання клавіш (Esc)
-  modalElement.value?.focus()
-  document.body.classList.add('modal-open')
-})
-
-onBeforeUnmount(() => {
-  document.body.classList.remove('modal-open')
-})
+function cancel(): void {
+  visible.value = false
+  emit('cancel')
+}
 </script>
 
 <template>
-  <!-- Teleport переносить вікно в кінець body, щоб воно було поверх усієї сторінки -->
-  <Teleport to="body">
-    <div class="modal-backdrop show"></div>
-    <div
-      ref="modal"
-      class="modal d-block"
-      tabindex="-1"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="base-modal-title"
-      @keydown.esc="emit('close')"
-      @click.self="emit('close')"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="base-modal-title" class="modal-title fs-5">{{ title }}</h2>
-            <button class="btn-close" type="button" aria-label="Закрити" @click="emit('close')"></button>
-          </div>
-          <div class="modal-body">
-            <slot />
-          </div>
-          <!-- Нижня панель з кнопками з'являється, лише якщо слот footer передано -->
-          <div v-if="$slots.footer" class="modal-footer">
-            <slot name="footer" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </Teleport>
+  <Dialog
+    v-model:visible="visible"
+    modal
+    :header="title"
+    :closable="!loading"
+    :style="{ width: '28rem', maxWidth: '95vw' }"
+    @hide="emit('cancel')"
+  >
+    <p class="mb-0">{{ message }}</p>
+    <AppAlert v-if="error" class="mt-3 mb-0">{{ error }}</AppAlert>
+    <template #footer>
+      <AppButton :label="confirmLabel" severity="danger" :loading="loading" @click="emit('confirm')" />
+      <AppButton :label="cancelLabel" severity="secondary" :disabled="loading" @click="cancel" />
+    </template>
+  </Dialog>
 </template>

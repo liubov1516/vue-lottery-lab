@@ -1,38 +1,71 @@
 <script setup lang="ts">
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'link' | 'outline-secondary'
+import Button from 'primevue/button'
+import { RouterLink, type RouteLocationRaw } from 'vue-router'
 
-withDefaults(
+// Обгортка над кнопкою UI-бібліотеки. Решта застосунку знає лише про AppButton,
+// тому заміна бібліотеки зачіпає лише цей шар
+defineOptions({ inheritAttrs: false })
+
+const props = withDefaults(
   defineProps<{
+    label: string
     type?: 'button' | 'submit'
-    variant?: ButtonVariant
-    disabled?: boolean
+    severity?: 'primary' | 'secondary' | 'danger'
     small?: boolean
-    // Показує спінер і блокує кнопку, поки триває запит
+    text?: boolean
     loading?: boolean
+    disabled?: boolean
+    icon?: string
+    // Якщо передано to, кнопка працює як посилання роутера
+    to?: RouteLocationRaw
   }>(),
   {
     type: 'button',
-    variant: 'primary',
-    disabled: false,
+    severity: 'primary',
     small: false,
+    text: false,
     loading: false,
+    disabled: false,
+    icon: undefined,
+    to: undefined,
   },
 )
 
 const emit = defineEmits<{
   click: [event: MouseEvent]
 }>()
+
+// У PrimeVue основна кнопка не має severity
+function libSeverity(): 'secondary' | 'danger' | undefined {
+  return props.severity === 'primary' ? undefined : props.severity
+}
 </script>
 
 <template>
-  <button
-    class="btn"
-    :class="[`btn-${variant}`, { 'btn-sm': small }]"
+  <RouterLink v-if="to" v-slot="{ href, navigate }" :to="to" custom>
+    <Button
+      v-bind="$attrs"
+      as="a"
+      :href="href"
+      :label="label"
+      :icon="icon"
+      :severity="libSeverity()"
+      :size="small ? 'small' : undefined"
+      :text="text"
+      @click="navigate"
+    />
+  </RouterLink>
+  <Button
+    v-else
+    v-bind="$attrs"
     :type="type"
+    :label="label"
+    :icon="icon"
+    :severity="libSeverity()"
+    :size="small ? 'small' : undefined"
+    :text="text"
+    :loading="loading"
     :disabled="disabled || loading"
     @click="emit('click', $event)"
-  >
-    <span v-if="loading" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
-    <slot />
-  </button>
+  />
 </template>
