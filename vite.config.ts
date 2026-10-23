@@ -5,12 +5,12 @@ import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-// Назва репозиторію на GitHub: сайт на gh-pages відкривається за адресою
-// https://<логін>.github.io/vue-lottery-app/, тому всі шляхи мають починатися з неї
-const REPOSITORY_NAME = 'vue-lottery-app'
+// Назва репозиторію на GitHub: сайт на гітхаб пейджез відкривається за адресою
+// https://liubov1516.github.io/vue-lottery-lab/ тому всі шляхи мають починатися з неї
+const REPOSITORY_NAME = 'vue-lottery-lab'
 
-// GitHub Pages не знає про маршрути Vue Router і на /users віддає 404.
-// Копія index.html під назвою 404.html змушує його відкрити застосунок,
+// GitHub Pages не знає про маршрути Vue Router і на /users віддає 404
+// Копія index.html під назвою 404.html змушує його відкрити застосунок
 // а далі роутер сам покаже потрібну сторінку
 function githubPagesFallback(): Plugin {
   return {

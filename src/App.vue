@@ -8,7 +8,7 @@ const AuthLayout = defineAsyncComponent(() => import('@/layouts/AuthLayout.vue')
 
 const route = useRoute()
 
-// Layout обирається за полем meta.layout поточного маршруту
+// Layout  обирається за полем meta.layout поточного маршруту
 const layout = computed(() => (route.meta.layout === 'auth' ? AuthLayout : DefaultLayout))
 </script>
 

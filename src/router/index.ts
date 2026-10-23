@@ -71,9 +71,9 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  // ВИКОРИСТОВУЄМО HashHistory замість WebHistory:
+  history: createWebHistory(),
   routes,
-  // Клас Bootstrap для активного пункту меню
   linkActiveClass: 'active',
   scrollBehavior: () => ({ top: 0 }),
 })
