@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import BaseAlert from '@/components/BaseAlert.vue'
-import BaseButton from '@/components/BaseButton.vue'
-import FormInput from '@/components/FormInput.vue'
-import { loginSchema, type LoginFormValues } from '@/validation/schemas'
+import { AppAlert, AppButton, AppFormInput } from '@/shared/ui'
+import { loginSchema, type LoginFormValues } from '../model/schema'
 
 withDefaults(
   defineProps<{
@@ -34,8 +32,8 @@ const onSubmit = handleSubmit((values) => {
 
 <template>
   <form novalidate @submit.prevent="onSubmit">
-    <FormInput id-prefix="login" name="username" label="Username" autocomplete="username" />
-    <FormInput
+    <AppFormInput id-prefix="login" name="username" label="Username" autocomplete="username" />
+    <AppFormInput
       id-prefix="login"
       name="password"
       label="Password"
@@ -43,8 +41,8 @@ const onSubmit = handleSubmit((values) => {
       autocomplete="current-password"
     />
 
-    <BaseAlert v-if="serverError">{{ serverError }}</BaseAlert>
+    <AppAlert v-if="serverError">{{ serverError }}</AppAlert>
 
-    <BaseButton class="w-100" type="submit" :loading="isSubmitting">Login</BaseButton>
+    <AppButton class="w-100" type="submit" label="Login" :loading="isSubmitting" />
   </form>
 </template>

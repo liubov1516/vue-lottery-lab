@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import AppLogo from '@/components/AppLogo.vue'
-import AppNavigation from '@/components/AppNavigation.vue'
-import UserAvatar from '@/components/UserAvatar.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useSessionStore } from '@/entities/session'
+import { UserAvatar } from '@/entities/user'
+import { ThemeToggle } from '@/features/theme-toggle'
+import AppLogo from './AppLogo.vue'
+import AppNavigation from './AppNavigation.vue'
 
-const auth = useAuthStore()
+const session = useSessionStore()
 </script>
 
 <template>
@@ -12,14 +13,17 @@ const auth = useAuthStore()
     <div class="container app-header__inner">
       <AppLogo />
       <AppNavigation />
-      <div v-if="auth.user" class="app-header__user">
-        <UserAvatar
-          :first-name="auth.user.firstName"
-          :last-name="auth.user.lastName"
-          :image="auth.user.image"
-          :size="28"
-        />
-        <span>{{ auth.user.firstName }}</span>
+      <div class="app-header__right">
+        <ThemeToggle />
+        <div v-if="session.user" class="app-header__user">
+          <UserAvatar
+            :first-name="session.user.firstName"
+            :last-name="session.user.lastName"
+            :image="session.user.image"
+            :size="28"
+          />
+          <span>{{ session.user.firstName }}</span>
+        </div>
       </div>
     </div>
   </header>
@@ -27,8 +31,8 @@ const auth = useAuthStore()
 
 <style scoped lang="scss">
 .app-header {
-  background: #fff;
-  border-bottom: 1px solid #e6e6e6;
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
 }
 
 .app-header__inner {
@@ -41,12 +45,18 @@ const auth = useAuthStore()
   padding-bottom: 0.75rem;
 }
 
+.app-header__right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
 .app-header__user {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-left: auto;
-  color: #555;
+  color: var(--app-text-muted);
   font-weight: 600;
 }
 </style>

@@ -53,7 +53,7 @@ import { RouterLink } from 'vue-router'
 }
 
 .app-logo__text {
-  color: #365314;
+  color: var(--app-logo-text);
   letter-spacing: -0.02em;
 }
 </style>

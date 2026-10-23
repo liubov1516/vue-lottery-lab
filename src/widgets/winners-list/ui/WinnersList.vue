@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import BaseButton from '@/components/BaseButton.vue'
-import WinnerItem from '@/components/WinnerItem.vue'
-import type { User } from '@/types/user'
+import type { User } from '@/entities/user'
+import { AppButton } from '@/shared/ui'
+import WinnerItem from './WinnerItem.vue'
 
 defineProps<{
   winners: User[]
@@ -26,9 +26,12 @@ const emit = defineEmits<{
         />
         <span class="winners-list__placeholder">Winners</span>
       </div>
-      <BaseButton class="flex-shrink-0" :disabled="!canPickWinner" @click="emit('pick-winner')">
-        New winner
-      </BaseButton>
+      <AppButton
+        class="flex-shrink-0"
+        label="New winner"
+        :disabled="!canPickWinner"
+        @click="emit('pick-winner')"
+      />
     </div>
   </section>
 </template>
@@ -40,8 +43,8 @@ const emit = defineEmits<{
   align-items: center;
   gap: 0.35rem;
   min-height: 2.4rem;
-  background-color: #fff;
-  border-color: #ddd;
+  background-color: var(--app-surface);
+  border-color: var(--app-border);
 }
 
 .winners-list__placeholder {

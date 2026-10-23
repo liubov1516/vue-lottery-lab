@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import BaseAlert from '@/components/BaseAlert.vue'
-import BaseButton from '@/components/BaseButton.vue'
-import BaseLoader from '@/components/BaseLoader.vue'
-import UserAvatar from '@/components/UserAvatar.vue'
-import UserDeleteModal from '@/components/UserDeleteModal.vue'
-import { useUsersStore } from '@/stores/users'
-import { getErrorMessage } from '@/utils/errors'
+import { UserAvatar, useUsersStore } from '@/entities/user'
+import { DeleteUserDialog } from '@/features/delete-user'
+import { getErrorMessage } from '@/shared/lib'
+import { AppAlert, AppButton, AppLoader } from '@/shared/ui'
 
 // id приходить як проп завдяки props: true у маршруті
 const props = defineProps<{
@@ -68,14 +65,14 @@ async function handleDeleted(): Promise<void> {
     <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>До списку учасників
   </RouterLink>
 
-  <BaseLoader v-if="isLoading && !user" />
+  <AppLoader v-if="isLoading && !user" />
 
-  <BaseAlert v-else-if="error && !user">
+  <AppAlert v-else-if="error && !user">
     {{ error }}
     <template #action>
-      <BaseButton variant="outline-secondary" small @click="loadUser">Спробувати ще раз</BaseButton>
+      <AppButton label="Спробувати ще раз" severity="secondary" small @click="loadUser" />
     </template>
-  </BaseAlert>
+  </AppAlert>
 
   <template v-else-if="user">
     <section class="card mb-3">
@@ -95,12 +92,12 @@ async function handleDeleted(): Promise<void> {
             </p>
           </div>
           <div v-if="!isEditing" class="d-flex gap-2">
-            <RouterLink class="btn btn-secondary" :to="{ name: 'user-edit', params: { id } }">
-              Редагувати дані
-            </RouterLink>
-            <BaseButton variant="danger" @click="isDeleteModalOpen = true">
-              Видалити учасника
-            </BaseButton>
+            <AppButton
+              label="Редагувати дані"
+              severity="secondary"
+              :to="{ name: 'user-edit', params: { id } }"
+            />
+            <AppButton label="Видалити учасника" severity="danger" @click="isDeleteModalOpen = true" />
           </div>
         </div>
 
@@ -137,7 +134,7 @@ async function handleDeleted(): Promise<void> {
     <RouterView />
   </template>
 
-  <UserDeleteModal
+  <DeleteUserDialog
     v-if="isDeleteModalOpen && user"
     :user="user"
     @close="isDeleteModalOpen = false"
@@ -161,7 +158,7 @@ async function handleDeleted(): Promise<void> {
   margin: 0;
 
   dt {
-    color: #777;
+    color: var(--app-text-muted);
     font-weight: 600;
   }
 

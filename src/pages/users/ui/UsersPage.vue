@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
-import BaseAlert from '@/components/BaseAlert.vue'
-import BaseButton from '@/components/BaseButton.vue'
-import BaseLoader from '@/components/BaseLoader.vue'
-import BasePagination from '@/components/BasePagination.vue'
-import SearchBar from '@/components/SearchBar.vue'
-import UserDeleteModal from '@/components/UserDeleteModal.vue'
-import UsersTable from '@/components/UsersTable.vue'
-import WinnersList from '@/components/WinnersList.vue'
-import { USERS_PAGE_SIZE, useUsersStore } from '@/stores/users'
-import type { User, UserSortKey } from '@/types/user'
-import { parseUsersQuery, toRouteQuery, type UsersListQuery } from '@/utils/users-query'
+import { useRoute, useRouter } from 'vue-router'
+import { USERS_PAGE_SIZE, useUsersStore, type User, type UserSortKey, type UsersListQuery } from '@/entities/user'
+import { DeleteUserDialog } from '@/features/delete-user'
+import { AppAlert, AppButton, AppLoader, AppPagination } from '@/shared/ui'
+import { UsersTable } from '@/widgets/users-table'
+import { WinnersList } from '@/widgets/winners-list'
+import { parseUsersQuery, toRouteQuery } from '../lib/users-query'
+import UsersSearch from './UsersSearch.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,7 +31,7 @@ watch(
       return
     }
     usersStore.lastListQuery = route.query
-    void usersStore.loadUsers(query)
+    void usersStore.fetchUsers(query)
   },
   { immediate: true },
 )
@@ -58,7 +54,7 @@ function changePage(page: number): void {
 }
 
 function retry(): void {
-  void usersStore.loadUsers(listQuery.value)
+  void usersStore.fetchUsers(listQuery.value)
 }
 
 const startIndex = computed(() => (listQuery.value.page - 1) * USERS_PAGE_SIZE + 1)
@@ -77,24 +73,22 @@ const userToDelete = ref<User | null>(null)
   <section class="card">
     <div class="card-body">
       <div class="users__toolbar">
-        <SearchBar
+        <UsersSearch
           class="flex-grow-1"
           :initial-query="listQuery.q"
           @filter-by-name="handleSearch"
         />
-        <RouterLink class="btn btn-primary" :to="{ name: 'user-create' }">
-          <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Додати учасника
-        </RouterLink>
+        <AppButton label="Додати учасника" icon="bi bi-plus-lg" :to="{ name: 'user-create' }" />
       </div>
 
-      <BaseAlert v-if="usersStore.error">
+      <AppAlert v-if="usersStore.error">
         Не вдалося завантажити учасників. {{ usersStore.error }}
         <template #action>
-          <BaseButton variant="outline-secondary" small @click="retry">Спробувати ще раз</BaseButton>
+          <AppButton label="Спробувати ще раз" severity="secondary" small @click="retry" />
         </template>
-      </BaseAlert>
+      </AppAlert>
 
-      <BaseLoader v-if="usersStore.isLoading && usersStore.users.length === 0" />
+      <AppLoader v-if="usersStore.isLoading && usersStore.users.length === 0" />
 
       <!-- Поки йде повторне завантаження, старий список трохи тьмяніє -->
       <div v-else :class="{ 'users__list--loading': usersStore.isLoading }">
@@ -112,7 +106,7 @@ const userToDelete = ref<User | null>(null)
         </p>
       </div>
 
-      <BasePagination
+      <AppPagination
         class="mt-3"
         :current-page="listQuery.page"
         :total-pages="usersStore.totalPages"
@@ -121,7 +115,7 @@ const userToDelete = ref<User | null>(null)
     </div>
   </section>
 
-  <UserDeleteModal
+  <DeleteUserDialog
     v-if="userToDelete"
     :user="userToDelete"
     @close="userToDelete = null"
@@ -145,7 +139,7 @@ const userToDelete = ref<User | null>(null)
 
 .users__empty {
   margin: 1.5rem 0 0.5rem;
-  color: #98a6ad;
+  color: var(--app-text-muted);
   text-align: center;
 }
 </style>

@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import BaseAlert from '@/components/BaseAlert.vue'
-import BaseButton from '@/components/BaseButton.vue'
-import BaseModal from '@/components/BaseModal.vue'
-import { useUsersStore } from '@/stores/users'
-import type { User } from '@/types/user'
-import { getErrorMessage } from '@/utils/errors'
+import { useUsersStore, type User } from '@/entities/user'
+import { getErrorMessage } from '@/shared/lib'
+import { AppConfirmDialog, useAppToast } from '@/shared/ui'
 
 const props = defineProps<{
   user: User
@@ -16,7 +13,10 @@ const emit = defineEmits<{
   deleted: [id: number]
 }>()
 
+const visible = defineModel<boolean>('visible', { default: true })
+
 const usersStore = useUsersStore()
+const toast = useAppToast()
 const isDeleting = ref(false)
 const error = ref<string | null>(null)
 
@@ -24,10 +24,13 @@ async function confirmDelete(): Promise<void> {
   isDeleting.value = true
   error.value = null
   try {
-    await usersStore.deleteUser(props.user.id)
+    await usersStore.removeUser(props.user.id)
+    toast.success(`Учасника ${props.user.firstName} ${props.user.lastName} видалено.`)
+    visible.value = false
     emit('deleted', props.user.id)
   } catch (deleteError) {
     error.value = getErrorMessage(deleteError)
+    toast.error(error.value)
   } finally {
     isDeleting.value = false
   }
@@ -35,16 +38,13 @@ async function confirmDelete(): Promise<void> {
 </script>
 
 <template>
-  <BaseModal title="Видалення учасника" @close="emit('close')">
-    <p class="mb-0">
-      Ви дійсно бажаєте видалити учасника "{{ user.firstName }} {{ user.lastName }}", "{{
-        user.email
-      }}"?
-    </p>
-    <BaseAlert v-if="error" class="mt-3 mb-0">{{ error }}</BaseAlert>
-    <template #footer>
-      <BaseButton variant="danger" :loading="isDeleting" @click="confirmDelete">Так</BaseButton>
-      <BaseButton variant="secondary" :disabled="isDeleting" @click="emit('close')">Ні</BaseButton>
-    </template>
-  </BaseModal>
+  <AppConfirmDialog
+    v-model:visible="visible"
+    title="Видалення учасника"
+    :message="`Ви дійсно бажаєте видалити учасника &quot;${user.firstName} ${user.lastName}&quot;, &quot;${user.email}&quot;?`"
+    :loading="isDeleting"
+    :error="error"
+    @confirm="confirmDelete"
+    @cancel="emit('close')"
+  />
 </template>

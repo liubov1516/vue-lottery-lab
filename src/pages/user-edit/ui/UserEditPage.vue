@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
-import UserForm from '@/components/UserForm.vue'
-import { useUsersStore } from '@/stores/users'
-import type { UpdateUserDto } from '@/types/user'
-import { getErrorMessage } from '@/utils/errors'
-import type { UserFormValues } from '@/validation/schemas'
+import { useRouter } from 'vue-router'
+import { useUsersStore, type UpdateUserDto } from '@/entities/user'
+import { UserForm, type UserFormValues } from '@/features/user-form'
+import { getErrorMessage } from '@/shared/lib'
+import { AppButton, useAppToast } from '@/shared/ui'
 
 const props = defineProps<{
   id: string
@@ -13,6 +12,7 @@ const props = defineProps<{
 
 const router = useRouter()
 const usersStore = useUsersStore()
+const toast = useAppToast()
 
 const userId = computed(() => Number(props.id))
 
@@ -39,9 +39,11 @@ async function updateUser(values: UserFormValues): Promise<void> {
   serverError.value = null
   try {
     await usersStore.updateUser(userId.value, data)
+    toast.success('Дані учасника оновлено.')
     await router.push({ name: 'user-details', params: { id: props.id } })
   } catch (error) {
     serverError.value = getErrorMessage(error)
+    toast.error(serverError.value)
   } finally {
     isSubmitting.value = false
   }
@@ -63,9 +65,11 @@ async function updateUser(values: UserFormValues): Promise<void> {
         @submit="updateUser"
       >
         <template #actions>
-          <RouterLink class="btn btn-secondary" :to="{ name: 'user-details', params: { id } }">
-            Скасувати
-          </RouterLink>
+          <AppButton
+            label="Скасувати"
+            severity="secondary"
+            :to="{ name: 'user-details', params: { id } }"
+          />
         </template>
       </UserForm>
     </div>

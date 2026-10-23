@@ -1,26 +1,24 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-
-const APP_NAME = 'Lottery'
+import { setupGuards } from './guards'
 
 // Усі сторінки завантажуються ліниво: код сторінки скачується лише при переході на неї
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
-    component: () => import('@/views/HomeView.vue'),
+    component: () => import('@/pages/home').then((m) => m.HomePage),
     meta: { title: 'Home' },
   },
   {
     path: '/about',
     name: 'about',
-    component: () => import('@/views/AboutView.vue'),
+    component: () => import('@/pages/about').then((m) => m.AboutPage),
     meta: { title: 'About author' },
   },
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/LoginView.vue'),
+    component: () => import('@/pages/login').then((m) => m.LoginPage),
     meta: { title: 'Login', layout: 'auth', guestOnly: true },
   },
   {
@@ -31,20 +29,20 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'users',
-        component: () => import('@/views/UsersView.vue'),
+        component: () => import('@/pages/users').then((m) => m.UsersPage),
         meta: { title: 'Users' },
       },
       {
         path: 'new',
         name: 'user-create',
-        component: () => import('@/views/UserCreateView.vue'),
+        component: () => import('@/pages/user-create').then((m) => m.UserCreatePage),
         meta: { title: 'New user' },
       },
       {
         // (\\d+): id складається лише з цифр, тому /users/new сюди не потрапить
         path: ':id(\\d+)',
         name: 'user-details',
-        component: () => import('@/views/UserDetailsView.vue'),
+        component: () => import('@/pages/user-details').then((m) => m.UserDetailsPage),
         // Параметр id передається в компонент як проп
         props: true,
         meta: { title: 'User details' },
@@ -53,7 +51,7 @@ const routes: RouteRecordRaw[] = [
             // Вкладений маршрут: форма показується всередині сторінки користувача
             path: 'edit',
             name: 'user-edit',
-            component: () => import('@/views/UserEditView.vue'),
+            component: () => import('@/pages/user-edit').then((m) => m.UserEditPage),
             props: true,
             meta: { title: 'Edit user' },
           },
@@ -65,36 +63,19 @@ const routes: RouteRecordRaw[] = [
     // Catch-all: усі інші адреси
     path: '/:pathMatch(.*)*',
     name: 'not-found',
-    component: () => import('@/views/NotFoundView.vue'),
+    component: () => import('@/pages/not-found').then((m) => m.NotFoundPage),
     meta: { title: 'Page not found' },
   },
 ]
 
 const router = createRouter({
-  // ВИКОРИСТОВУЄМО HashHistory замість WebHistory:
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+  // Клас Bootstrap для активного пункту меню
   linkActiveClass: 'active',
   scrollBehavior: () => ({ top: 0 }),
 })
 
-// Navigation guard: виконується перед кожним переходом
-router.beforeEach((to) => {
-  const auth = useAuthStore()
-
-  if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    // Запам'ятовуємо, куди хотів потрапити користувач, щоб повернути його після входу
-    return { name: 'login', query: { redirect: to.fullPath } }
-  }
-
-  if (to.meta.guestOnly && auth.isAuthenticated) {
-    return { name: 'users' }
-  }
-})
-
-// Після переходу міняємо заголовок вкладки
-router.afterEach((to) => {
-  document.title = to.meta.title ? `${to.meta.title} | ${APP_NAME}` : APP_NAME
-})
+setupGuards(router)
 
 export default router

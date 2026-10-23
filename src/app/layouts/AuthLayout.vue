@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import AppLogo from '@/components/AppLogo.vue'
+import { AppLogo } from '@/widgets/app-header'
 </script>
 
 <template>

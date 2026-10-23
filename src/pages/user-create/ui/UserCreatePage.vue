@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import UserForm from '@/components/UserForm.vue'
-import { useUsersStore } from '@/stores/users'
-import { getErrorMessage } from '@/utils/errors'
-import type { UserFormValues } from '@/validation/schemas'
+import { useUsersStore } from '@/entities/user'
+import { UserForm, type UserFormValues } from '@/features/user-form'
+import { getErrorMessage } from '@/shared/lib'
+import { useAppToast } from '@/shared/ui'
 
 const router = useRouter()
 const usersStore = useUsersStore()
+const toast = useAppToast()
 
 const isSubmitting = ref(false)
 const serverError = ref<string | null>(null)
@@ -16,11 +17,13 @@ async function createUser(values: UserFormValues): Promise<void> {
   isSubmitting.value = true
   serverError.value = null
   try {
-    await usersStore.createUser(values)
+    const user = await usersStore.createUser(values)
+    toast.success(`Учасника ${user.firstName} ${user.lastName} створено.`)
     // Новий учасник показується на початку першої сторінки списку
     await router.push({ name: 'users' })
   } catch (error) {
     serverError.value = getErrorMessage(error)
+    toast.error(serverError.value)
   } finally {
     isSubmitting.value = false
   }

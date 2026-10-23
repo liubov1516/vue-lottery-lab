@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { PROJECT_TECHNOLOGIES, REPOSITORY_URL } from '@/config/project'
-import { useAuthStore } from '@/stores/auth'
+import { useSessionStore } from '@/entities/session'
+import { PROJECT_TECHNOLOGIES, REPOSITORY_URL } from '@/shared/config'
+import { AppButton } from '@/shared/ui'
 
-const auth = useAuthStore()
+const session = useSessionStore()
 </script>
 
 <template>
@@ -16,10 +16,11 @@ const auth = useAuthStore()
         випадково обирати до трьох переможців.
       </p>
       <div class="d-flex flex-wrap gap-2">
-        <RouterLink class="btn btn-primary" :to="{ name: 'users' }">
-          {{ auth.isAuthenticated ? 'Перейти до учасників' : 'Увійти та переглянути учасників' }}
-        </RouterLink>
-        <a class="btn btn-outline-secondary" :href="REPOSITORY_URL" target="_blank" rel="noopener">
+        <AppButton
+          :label="session.isAuthenticated ? 'Перейти до учасників' : 'Увійти та переглянути учасників'"
+          :to="{ name: 'users' }"
+        />
+        <a class="home__github" :href="REPOSITORY_URL" target="_blank" rel="noopener">
           <i class="bi bi-github me-1" aria-hidden="true"></i>Код на GitHub
         </a>
       </div>
@@ -48,8 +49,16 @@ const auth = useAuthStore()
 .home__lead {
   max-width: 60ch;
   margin-bottom: 1.5rem;
-  color: #555;
+  color: var(--app-text-muted);
   font-size: 1.05rem;
+}
+
+.home__github {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .home__technologies {

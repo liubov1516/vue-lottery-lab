@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { AppButton } from '@/shared/ui'
 </script>
 
 <template>
@@ -8,7 +8,7 @@ import { RouterLink } from 'vue-router'
       <p class="not-found__code">404</p>
       <h1 class="h4">Сторінку не знайдено</h1>
       <p class="text-secondary">Можливо, адресу введено з помилкою або сторінку видалено.</p>
-      <RouterLink class="btn btn-primary" :to="{ name: 'home' }">На головну</RouterLink>
+      <AppButton label="На головну" :to="{ name: 'home' }" />
     </div>
   </section>
 </template>

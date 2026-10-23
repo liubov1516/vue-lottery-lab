@@ -1,25 +1,33 @@
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { useAuthStore } from '@/features/auth'
+import { setAuthHooks } from '@/shared/api'
+import { useSessionStore } from '@/entities/session'
 import App from './App.vue'
-import router from './router'
-import { setAuthHooks } from './api/http-client'
-import { useAuthStore } from './stores/auth'
+import { setupPinia } from './providers/pinia'
+import router from './providers/router'
+import { registerServices } from './providers/services'
+import { setupUi } from './providers/ui'
 
 import 'bootstrap-icons/font/bootstrap-icons.css'
-import './assets/styles/main.scss'
+import './styles/main.scss'
+
+// Сервіси реєструються до того, як будь-яке сторі спробує їх використати
+registerServices()
 
 const app = createApp(App)
-const pinia = createPinia()
+const pinia = setupPinia()
 
 // Pinia підключаємо першою: guard роутера вже використовує сторі
 app.use(pinia)
 app.use(router)
+setupUi(app)
 
+const session = useSessionStore(pinia)
 const auth = useAuthStore(pinia)
 
 // Пояснюємо HTTP-клієнту, де брати токен і що робити при 401
 setAuthHooks({
-  getAccessToken: () => auth.accessToken,
+  getAccessToken: () => session.accessToken,
   refreshAccessToken: () => auth.refreshAccessToken(),
   onUnauthorized: () => {
     auth.logout()

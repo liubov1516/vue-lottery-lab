@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AUTHOR, GITHUB_PROFILE_URL, TECHNICAL_SKILLS } from '@/config/project'
+import { AUTHOR, GITHUB_PROFILE_URL, TECHNICAL_SKILLS } from '@/shared/config'
 </script>
 
 <template>
@@ -31,7 +31,7 @@ import { AUTHOR, GITHUB_PROFILE_URL, TECHNICAL_SKILLS } from '@/config/project'
 
 .about__role {
   margin-bottom: 0;
-  color: #777;
+  color: var(--app-text-muted);
 }
 
 .about__skills {

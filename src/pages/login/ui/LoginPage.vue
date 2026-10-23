@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
-import LoginForm from '@/components/LoginForm.vue'
-import { useAuthStore } from '@/stores/auth'
-import type { LoginFormValues } from '@/validation/schemas'
+import { LoginForm, useAuthStore, type LoginFormValues } from '@/features/auth'
+import { useAppToast } from '@/shared/ui'
 
 const auth = useAuthStore()
+const toast = useAppToast()
 const route = useRoute()
 const router = useRouter()
 
@@ -21,7 +21,10 @@ function getRedirectTarget(): RouteLocationRaw {
 async function handleLogin(values: LoginFormValues): Promise<void> {
   const success = await auth.login(values)
   if (success) {
+    toast.success('Вхід виконано.')
     await router.replace(getRedirectTarget())
+  } else if (auth.loginError) {
+    toast.error(auth.loginError)
   }
 }
 
@@ -50,7 +53,7 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .login__hint {
-  color: #777;
+  color: var(--app-text-muted);
   font-size: 0.875rem;
 }
 </style>

@@ -36,51 +36,67 @@ $table-border-color: #eee;
 @import 'bootstrap/scss/containers';
 @import 'bootstrap/scss/grid';
 @import 'bootstrap/scss/forms';
-@import 'bootstrap/scss/buttons';
-@import 'bootstrap/scss/tables';
 @import 'bootstrap/scss/card';
 @import 'bootstrap/scss/badge';
-@import 'bootstrap/scss/close';
 @import 'bootstrap/scss/nav';
 @import 'bootstrap/scss/pagination';
 @import 'bootstrap/scss/alert';
 @import 'bootstrap/scss/spinners';
-@import 'bootstrap/scss/modal';
 @import 'bootstrap/scss/transitions';
 @import 'bootstrap/scss/helpers';
 @import 'bootstrap/scss/utilities/api';
 
-// 5. Дрібні загальні правки під дизайн
-.btn-primary {
-  --bs-btn-color: #fff;
-  --bs-btn-hover-color: #fff;
-  --bs-btn-active-color: #fff;
-  --bs-btn-disabled-color: #fff;
-  font-weight: 600;
+// 5. Кольори, які змінюються разом із темою (світла / темна)
+:root {
+  --app-surface: #fff;
+  --app-border: #e6e6e6;
+  --app-text-muted: #777;
+  --app-logo-text: #365314;
 }
 
-.btn-danger,
-.btn-secondary {
-  --bs-btn-color: #fff;
-  --bs-btn-hover-color: #fff;
-  --bs-btn-active-color: #fff;
+.app-dark {
+  color-scheme: dark;
+  --app-surface: #1f2328;
+  --app-border: #343a40;
+  --app-text-muted: #9aa4ad;
+  --app-logo-text: #bef264;
+  --bs-body-bg: #16181b;
+  --bs-body-color: #dee2e6;
+
+  .card {
+    --bs-card-bg: #1f2328;
+    --bs-card-border-color: #343a40;
+    --bs-card-color: #dee2e6;
+  }
+
+  .form-control {
+    background-color: #2b3035;
+    border-color: #495057;
+    color: #dee2e6;
+  }
+
+  .nav-pills .nav-link {
+    color: #ced4da;
+  }
 }
 
+// 6. Дрібні загальні правки під дизайн
 .form-label {
   font-weight: 600;
 }
 
-// Пункти меню: активний виділяється блакитним фоном
+// Пункти меню: активний виділяється кольором
 .nav-pills .nav-link {
-  color: #555;
+  color: var(--app-text-muted);
   font-weight: 600;
 }
 
-button.nav-link {
-  border: 0;
-}
-
-// Білий текст на блакитних бейджах (ролі, навички, переможці)
+// Білий текст на бейджах (ролі, навички, переможці)
 .badge.text-bg-primary {
   color: #fff !important;
+}
+
+// Шрифти PrimeVue такі самі, як у решти застосунку
+.p-component {
+  font-family: inherit;
 }
