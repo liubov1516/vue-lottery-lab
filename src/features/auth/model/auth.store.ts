@@ -1,74 +1,24 @@
-import { computed, ref, watch } from 'vue'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { HttpError } from '@/api/http-client'
-import { ServiceProvider } from '@/services/service-provider'
-import type { AuthUser, LoginCredentials } from '@/types/auth'
-import { getErrorMessage } from '@/utils/errors'
+import { useSessionStore, type AuthService, type LoginCredentials } from '@/entities/session'
+import { HttpError, ServiceProvider } from '@/shared/api'
+import { getErrorMessage } from '@/shared/lib'
 
-const STORAGE_KEY = 'vue-lottery-app:auth'
-
-interface StoredAuth {
-  accessToken: string | null
-  refreshToken: string | null
-  user: AuthUser | null
-}
-
-function readStoredAuth(): StoredAuth {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      return JSON.parse(raw) as StoredAuth
-    }
-  } catch {
-    // Пошкоджені дані або недоступний localStorage: починаємо без входу
-  }
-  return { accessToken: null, refreshToken: null, user: null }
-}
-
+// Сценарії авторизації: вхід, вихід, оновлення токена.
+// Сам стан (токени, користувач) зберігається в entities/session
 export const useAuthStore = defineStore('auth', () => {
-  // Відновлюємо стан із localStorage при запуску застосунку
-  const stored = readStoredAuth()
-
-  const accessToken = ref<string | null>(stored.accessToken)
-  const refreshToken = ref<string | null>(stored.refreshToken)
-  const user = ref<AuthUser | null>(stored.user)
+  const session = useSessionStore()
+  const service = () => ServiceProvider.get<AuthService>('auth')
 
   const isLoggingIn = ref(false)
   const loginError = ref<string | null>(null)
-
-  const isAuthenticated = computed(() => accessToken.value !== null)
-
-  // Будь-яка зміна токенів чи користувача одразу зберігається в localStorage
-  watch(
-    [accessToken, refreshToken, user],
-    () => {
-      try {
-        if (accessToken.value) {
-          const data: StoredAuth = {
-            accessToken: accessToken.value,
-            refreshToken: refreshToken.value,
-            user: user.value,
-          }
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-        } else {
-          localStorage.removeItem(STORAGE_KEY)
-        }
-      } catch {
-        // localStorage недоступний: вхід працюватиме до перезавантаження сторінки
-      }
-    },
-    { deep: true },
-  )
 
   async function login(credentials: LoginCredentials): Promise<boolean> {
     isLoggingIn.value = true
     loginError.value = null
     try {
-      const { accessToken: newAccessToken, refreshToken: newRefreshToken, ...profile } =
-        await ServiceProvider.auth.login(credentials)
-      accessToken.value = newAccessToken
-      refreshToken.value = newRefreshToken
-      user.value = profile
+      const { accessToken, refreshToken, ...profile } = await service().login(credentials)
+      session.setSession({ accessToken, refreshToken }, profile)
       return true
     } catch (error) {
       loginError.value =
@@ -83,11 +33,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Перевіряє збережений токен через захищений ендпоінт /auth/me
   async function fetchCurrentUser(): Promise<void> {
-    if (!accessToken.value) {
+    if (!session.accessToken) {
       return
     }
     try {
-      user.value = await ServiceProvider.auth.getCurrentUser()
+      session.setUser(await service().getCurrentUser())
     } catch {
       // 401 уже оброблено в http-клієнті (оновлення токена або вихід)
     }
@@ -95,13 +45,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Викликається http-клієнтом, коли сервер відповів 401
   async function refreshAccessToken(): Promise<boolean> {
-    if (!refreshToken.value) {
+    if (!session.refreshToken) {
       return false
     }
     try {
-      const tokens = await ServiceProvider.auth.refresh(refreshToken.value)
-      accessToken.value = tokens.accessToken
-      refreshToken.value = tokens.refreshToken
+      const tokens = await service().refresh(session.refreshToken)
+      session.setSession(tokens, session.user)
       return true
     } catch {
       return false
@@ -109,21 +58,8 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function logout(): void {
-    accessToken.value = null
-    refreshToken.value = null
-    user.value = null
+    session.clearSession()
   }
 
-  return {
-    accessToken,
-    refreshToken,
-    user,
-    isAuthenticated,
-    isLoggingIn,
-    loginError,
-    login,
-    fetchCurrentUser,
-    refreshAccessToken,
-    logout,
-  }
+  return { isLoggingIn, loginError, login, fetchCurrentUser, refreshAccessToken, logout }
 })

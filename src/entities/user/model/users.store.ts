@@ -1,15 +1,18 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { LocationQuery } from 'vue-router'
-import { ServiceProvider } from '@/services/service-provider'
-import type { CreateUserDto, UpdateUserDto, User } from '@/types/user'
-import { getErrorMessage } from '@/utils/errors'
-import type { UsersListQuery } from '@/utils/users-query'
+import { ServiceProvider } from '@/shared/api'
+import { getErrorMessage } from '@/shared/lib'
+import type { UserService } from '../api/user.service'
+import type { CreateUserDto, UpdateUserDto, User, UsersListQuery } from './types'
 
 export const USERS_PAGE_SIZE = 10
 export const MAX_WINNERS = 3
 
 export const useUsersStore = defineStore('users', () => {
+  // Сервіс отримуємо через реєстр (зареєстрований у app/providers/services.ts)
+  const service = () => ServiceProvider.get<UserService>('users')
+
   // Поточна сторінка з сервера
   const pageUsers = ref<User[]>([])
   const total = ref(0)
@@ -62,9 +65,10 @@ export const useUsersStore = defineStore('users', () => {
     return [...created, ...fromServer]
   })
 
+  const hasUsers = computed(() => users.value.length > 0)
   const totalPages = computed(() => Math.max(1, Math.ceil(total.value / USERS_PAGE_SIZE)))
 
-  async function loadUsers(query: UsersListQuery): Promise<void> {
+  async function fetchUsers(query: UsersListQuery): Promise<void> {
     // Якщо користувач швидко гортає сторінки, відповіді можуть прийти не по черзі.
     // Зберігаємо лише відповідь на останній запит
     const requestId = ++latestRequestId
@@ -80,8 +84,8 @@ export const useUsersStore = defineStore('users', () => {
 
     try {
       const result = query.q
-        ? await ServiceProvider.users.search(query.q, params)
-        : await ServiceProvider.users.getAll(params)
+        ? await service().search(query.q, params)
+        : await service().getAll(params)
       if (requestId !== latestRequestId) {
         return
       }
@@ -125,13 +129,13 @@ export const useUsersStore = defineStore('users', () => {
     if (known) {
       return known
     }
-    const user = await ServiceProvider.users.getById(id)
+    const user = await service().getById(id)
     loadedUsers.value[id] = user
     return user
   }
 
   async function createUser(data: CreateUserDto): Promise<User> {
-    const response = await ServiceProvider.users.create(data)
+    const response = await service().create(data)
     // DummyJSON завжди повертає однаковий id (209), тому робимо його унікальним
     const id = Math.max(Number(response.id), nextLocalId)
     nextLocalId = id + 1
@@ -144,7 +148,7 @@ export const useUsersStore = defineStore('users', () => {
     const current = await fetchUser(id)
     // Користувача, створеного локально, на сервері не існує (PUT поверне 404),
     // тому його змінюємо лише в локальному стані
-    const response = isLocalUser(id) ? {} : await ServiceProvider.users.update(id, data)
+    const response = isLocalUser(id) ? {} : await service().update(id, data)
     const updated: User = { ...current, ...response, ...data, id }
 
     if (isLocalUser(id)) {
@@ -156,11 +160,11 @@ export const useUsersStore = defineStore('users', () => {
     return updated
   }
 
-  async function deleteUser(id: number): Promise<void> {
+  async function removeUser(id: number): Promise<void> {
     if (isLocalUser(id)) {
       createdUsers.value = createdUsers.value.filter((user) => user.id !== id)
     } else {
-      await ServiceProvider.users.delete(id)
+      await service().delete(id)
       deletedIds.value.push(id)
       delete updatedUsers.value[id]
     }
@@ -200,13 +204,14 @@ export const useUsersStore = defineStore('users', () => {
     totalPages,
     isLoading,
     error,
+    hasUsers,
     lastListQuery,
-    loadUsers,
+    fetchUsers,
     findUser,
     fetchUser,
     createUser,
     updateUser,
-    deleteUser,
+    removeUser,
     winners,
     canPickWinner,
     pickWinner,
