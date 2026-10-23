@@ -1,5 +1,5 @@
-import { http } from '@/api/http-client'
-import type { AuthTokens, AuthUser, LoginCredentials, LoginResponse } from '@/types/auth'
+import { http } from '@/shared/api'
+import type { AuthTokens, AuthUser, LoginCredentials, LoginResponse } from '../model/types'
 
 // Скільки хвилин живе accessToken. Щоб показати автоматичне оновлення
 // токена на захисті, можна тимчасово поставити 1

@@ -1,5 +1,4 @@
-import { http } from '@/api/http-client'
-import type { CreateUserDto, UpdateUserDto, User, UsersResponse } from '@/types/user'
+import { http } from '@/shared/api'
 import type {
   Creatable,
   Deletable,
@@ -8,7 +7,8 @@ import type {
   PaginatedResult,
   Readable,
   Searchable,
-} from './interfaces'
+} from '@/shared/api'
+import type { CreateUserDto, UpdateUserDto, User, UsersResponse } from '../model/types'
 
 type QueryParams = ListParams & { q?: string }
 

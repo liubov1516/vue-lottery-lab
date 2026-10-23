@@ -1,19 +1,25 @@
-import { AuthService } from './auth.service'
-import { UserService } from './user.service'
+type Factory<T> = () => T
 
-// Фабрика: єдина точка отримання сервісів.
-// Кожен сервіс створюється лише один раз, при першому зверненні
+// Універсальний реєстр сервісів. Шар shared нічого не знає про конкретні сервіси,
+// тому вони реєструються на рівні app (src/app/providers/services.ts)
 export class ServiceProvider {
-  private static userService?: UserService
-  private static authService?: AuthService
+  private static factories = new Map<string, Factory<unknown>>()
+  private static instances = new Map<string, unknown>()
 
-  static get users(): UserService {
-    this.userService ??= new UserService()
-    return this.userService
+  static register<T>(key: string, factory: Factory<T>): void {
+    this.factories.set(key, factory)
+    // Нова реєстрація скидає вже створений екземпляр
+    this.instances.delete(key)
   }
 
-  static get auth(): AuthService {
-    this.authService ??= new AuthService()
-    return this.authService
+  static get<T>(key: string): T {
+    if (!this.instances.has(key)) {
+      const factory = this.factories.get(key)
+      if (!factory) {
+        throw new Error(`Service "${key}" is not registered`)
+      }
+      this.instances.set(key, factory())
+    }
+    return this.instances.get(key) as T
   }
 }
